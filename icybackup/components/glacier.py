@@ -63,18 +63,19 @@ def prune(arn, settings):
 	keep_weekly_before = datetime.now() - timedelta(days=365)
 	oldest_date = models.GlacierBackup.objects.all().order_by('date')[0].date
 	_do_delete(vault, 1, keep_all_before, keep_daily_before)
-	_do_delete(vault, 30, keep_daily_before, keep_weekly_before)
+	_do_delete(vault, 7, keep_daily_before, keep_weekly_before)
 	_do_delete(vault, 30, keep_weekly_before, oldest_date)
 
 def _do_delete(vault, day_count, from_date, to_date):
 	begin_date = from_date
-	while begin_date >= to_date:
+	while begin_date > to_date:
 		end_date = begin_date - timedelta(days=day_count)
 		if end_date < to_date:
 			end_date = to_date
-		qs = models.GlacierBackup.objects.filter(date__lt=end_date, date__gte=begin_date)
+		qs = models.GlacierBackup.objects.filter(date__gt=end_date, date__lte=begin_date)
 		# delete all but the most recent
 		for record in qs[1:]:
 			print "Deleting", record.glacier_id
 			vault.delete(record.glacier_id)
 			record.delete()
+		begin_date = end_date
