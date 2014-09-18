@@ -16,6 +16,7 @@ def _get_vault_from_arn(arn, settings):
 
 def upload(arn, output_file, settings):
 	vault = _get_vault_from_arn(arn, settings)
+	vault.name = str(vault.name)
 	id = vault.upload_archive(output_file)
 	
 	# record backup internally
